@@ -36,4 +36,4 @@ public macro regex<M>(_ value: Regex<M>, priority: UInt? = nil) = #externalMacro
 
 /// Lexer Conformance Macro
 @attached(extension, conformances: LexerProtocol, Into, names: arbitrary)
-public macro lexer(skip chars: String? = nil) = #externalMacro(module: "LexerMacros", type: "LexerMacro")
+public macro Lexer(skip chars: String? = nil) = #externalMacro(module: "LexerMacros", type: "LexerMacro")

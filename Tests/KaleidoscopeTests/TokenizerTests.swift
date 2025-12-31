@@ -7,10 +7,10 @@
 
 import Testing
 import XCTest
-import Lexer
+import Lexing
 import LexerMacros
 
-@lexer()
+@Lexer
 enum PriorityTest: Equatable {
 	@token("fast")
 	case Fast
@@ -41,7 +41,7 @@ nonisolated(unsafe) let excTokenGen: CreateCallback<CallbackTest, TokenResult<Ca
 	}
 }
 
-@lexer(skip: " ")
+@Lexer(skip: " ")
 enum CallbackTest: Equatable {
 	@regex(/[0-9]*?\.[0-9]+?/, fillCallback: convertDouble)
 	case Double(Double)

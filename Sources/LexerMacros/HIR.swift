@@ -89,7 +89,7 @@ public enum HIRParsingError: Error {
 	case GreedyMatchingMore
 	case NotSupportedRepetitionKind
 	case NotSupportedQualification
-	case NotSupportedAtomKind
+	case NotSupportedAtomKind(String)
 	case NotSupportedRegexNode
 	case NotSupportedCharacterClass
 	case IncorrectCharRange
@@ -246,7 +246,7 @@ public extension HIR {
 			// start of the line
 			// end of the line
 			// and other things
-			throw HIRParsingError.NotSupportedAtomKind
+			throw HIRParsingError.NotSupportedAtomKind("\(atom.kind)")
 		}
 	}
 
@@ -281,7 +281,7 @@ public extension HIR {
 
 					return [scalar[0] ... scalar[0]]
 				case _:
-					throw HIRParsingError.NotSupportedAtomKind
+					throw HIRParsingError.NotSupportedAtomKind("\(atom.kind)")
 				}
 			case .quote:
 				throw HIRParsingError.QuoteInCharacterClass

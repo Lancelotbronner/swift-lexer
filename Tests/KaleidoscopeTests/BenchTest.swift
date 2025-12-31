@@ -7,9 +7,9 @@
 
 import Testing
 import XCTest
-import Lexer
+import Lexing
 
-@lexer(skip: "\t| |\n")
+@Lexer(skip: "\t| |\n")
 enum BenchTestToken {
 	@regex(/[a-zA-Z_$][a-zA-Z0-9_$]*?/)
 	case Identifier

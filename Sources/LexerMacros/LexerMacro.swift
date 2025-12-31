@@ -10,11 +10,12 @@ import SwiftSyntax
 import SwiftSyntaxBuilder
 import SwiftSyntaxMacros
 
-let KALEIDOSCOPE_PACKAGE_NAME: String = "Lexer"
+let KALEIDOSCOPE_PACKAGE_NAME: String = "Lexing"
 
-let KALEIDOSCOPE_MACRO_NAME: String = "lexer"
+let KALEIDOSCOPE_MACRO_NAME: String = "Lexer"
 let KALEIDOSCOPE_MACRO_SKIP_ATTR: String = "skip"
 
+//TODO: use only @Token and choose variant based on String/Regex literal
 let KALEIDOSCOPE_REGEX_NAME: String = "regex"
 let KALEIDOSCOPE_TOKEN_NAME: String = "token"
 
@@ -120,8 +121,8 @@ public struct LexerMacro: ExtensionMacro {
 
 		let lexerConformance: DeclSyntax = try """
 		extension \(raw: enumIdent): LexerProtocol {
-			typealias TokenType = Self
-			typealias RawSource = String
+			public typealias TokenType = Self
+			public typealias RawSource = String
 		
 			public static func lex(_ lexer: inout LexerMachine<Self>) throws {
 				\(raw: generator.buildFunctions())

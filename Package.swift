@@ -13,7 +13,7 @@ let package = Package(
 		.macCatalyst(.v13),
 	],
 	products: [
-		.library(name: "Lexer", targets: ["Lexer"]),
+		.library(name: "Lexing", targets: ["Lexing"]),
 	],
 	dependencies: [
 		.package(url: "https://github.com/apple/swift-syntax.git", from: "602.0.0"),
@@ -32,14 +32,14 @@ let package = Package(
 				"CoreLexer"
 			]),
 		.target(name: "CoreLexer"),
-		.target(name: "Lexer", dependencies: ["LexerMacros", "CoreLexer"]),
+		.target(name: "Lexing", dependencies: ["LexerMacros", "CoreLexer"]),
 		.testTarget(
 			name: "LexerTests",
 			dependencies: [
 				.product(name: "SwiftSyntaxMacrosTestSupport", package: "swift-syntax"),
 				"LexerMacros",
 				"CoreLexer",
-				"Lexer",
+				"Lexing",
 			]
 		),
 	]
