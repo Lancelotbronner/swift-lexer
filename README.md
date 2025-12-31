@@ -1,28 +1,28 @@
-# Kaleidoscope
+# Lexing
 
 This is a lexer inspired by [logos](https://github.com/maciejhirsz/logos). It utilizes swift macros enable easy creation. 
 
 ## Example
 
 ```swift
-import Kaleidoscope
+import Lexing
 
 let lambda: (inout LexerMachine<Tokens>) -> Substring = { $0.slice }
 
-@kaleidoscope(skip: " |\t|\n")
+@Lexer(skip: " |\t|\n")
 enum Tokens {
-    @token("not")
+    @Token("not")
     case Not
 
-    @regex("very")
+    @Token("very")
     case Very
 
-    @token("tokenizer")
+    @Token("tokenizer")
     case Tokenizer
 
     // you could feed a closure directly to `onMatch` but swift doesn't like it for some reason
     // seems to be a compiler bug (https://github.com/apple/swift/issues/70322)
-    @regex("[a-zA-Z_][a-zA-Z1-9$_]*?", onMatch: lambda) 
+    @Token("[a-zA-Z_][a-zA-Z1-9$_]*?", onMatch: lambda) 
     case Identifier(Substring)
 }
 
@@ -44,7 +44,7 @@ Tokenizer
 
 ## Idea
 
-The project is provides three macros: `@kaleidoscope`, `regex`, and `token`, and they work together to generate conformance to `LexerProtocol` for the decorated  enums. `regex` takes in a regex expression for matching and `token` takes a string for excat matching. In addition, they can take a `onMatch` callback and a `priority` integer. The callback has access to token string slice and can futher transform it to whatever type required by the enum case. The priority are calculated by from the expression by default. However, if two exprssions have the same weight, manual specification is required to resolve the conflict. 
+The project is provides three macros: `@Lexer`, `regex`, and `token`, and they work together to generate conformance to `LexerProtocol` for the decorated  enums. `regex` takes in a regex expression for matching and `token` takes a string for excat matching. In addition, they can take a `onMatch` callback and a `priority` integer. The callback has access to token string slice and can futher transform it to whatever type required by the enum case. The priority are calculated by from the expression by default. However, if two exprssions have the same weight, manual specification is required to resolve the conflict. 
 
 Internally, all regex expressions and token strings are converted into a single finite automata. The finite automata consumes one character from the input at a time, until it reaches an token match or an error. This machanism is simple but works slowly. Future improvements can be established on this issue. 
 

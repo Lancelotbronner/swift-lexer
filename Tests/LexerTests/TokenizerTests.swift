@@ -12,10 +12,10 @@ import LexerMacros
 
 @Lexer
 enum PriorityTest: Equatable {
-	@token("fast")
+	@Token("fast")
 	case Fast
 
-	@token("fast", priority: 10)
+	@Token("fast", priority: 10)
 	case Faaaast
 }
 
@@ -43,37 +43,38 @@ nonisolated(unsafe) let excTokenGen: CreateCallback<CallbackTest, TokenResult<Ca
 
 @Lexer(skip: " ")
 enum CallbackTest: Equatable {
-	@regex(/[0-9]*?\.[0-9]+?/, fillCallback: convertDouble)
+	@Token(/[0-9]*?\.[0-9]+?/, fillCallback: convertDouble)
 	case Double(Double)
 
-	@regex(/[0-9]+?/, fillCallback: convertInt)
+	@Token(/[0-9]+?/, fillCallback: convertInt)
 	case Number(Int)
 
-	@token("what", fillCallback: toSubstring)
+	@Token("what", fillCallback: toSubstring)
 	case What(Substring)
 
-	@regex(/\/\/.*?/, fillCallback: toSubstring)
+	@Token(/\/\/.*?/, fillCallback: toSubstring)
 	case Comment(Substring)
 
-	@token(".")
+	@Token(".")
 	case Dot
 
-	@regex(/\?*?/, createCallback: questionTokenGen)
+	@Token(/\?*?/, createCallback: questionTokenGen)
 	case Question(Int)
 
-	@regex(/!*?/, priority: 2, createCallback: excTokenGen)
+	@Token(/!*?/, priority: 2, createCallback: excTokenGen)
 	case Exc
 }
 
-final class TestTokenizer: XCTestCase {
-	func testPriority() throws {
-		XCTAssertEqual(PriorityTest.lexer(source: "fast").toUnwrappedArray(), [PriorityTest.Faaaast])
+@Suite
+struct TokenizerTests {
+	@Test func priority() throws {
+		#expect(PriorityTest.lexer(source: "fast").toUnwrappedArray() == [PriorityTest.Faaaast])
 	}
 
-	func testCallback() throws {
-		XCTAssertEqual(
-			CallbackTest.lexer(source: "100 1.5 .6 what . ? ??? ???? !! ! // this is a comment").toUnwrappedArray(),
-			[.Number(100), .Double(1.5), .Double(0.6), .What("what"), .Dot, .Question(1), .Question(3), .Question(0), .Exc, .Comment("// this is a comment")]
-		)
+	@Test func callback() throws {
+		let tokens = CallbackTest.lexer(source: "100 1.5 .6 what . ? ??? ???? !! ! // this is a comment").toUnwrappedArray()
+		#expect(tokens == [
+			.Number(100), .Double(1.5), .Double(0.6), .What("what"), .Dot, .Question(1), .Question(3), .Question(0), .Exc, .Comment("// this is a comment")
+		])
 	}
 }

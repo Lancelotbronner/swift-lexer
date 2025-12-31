@@ -6,7 +6,7 @@ import PackageDescription
 let package = Package(
 	name: "swift-lexer",
 	platforms: [
-		.macOS(.v13),
+		.macOS(.v15),
 		.iOS(.v13),
 		.tvOS(.v13),
 		.watchOS(.v6),
@@ -22,6 +22,10 @@ let package = Package(
 		.package(url: "https://github.com/apple/swift-docc-plugin", from: "1.3.0"),
 	],
 	targets: [
+		.target(name: "RegexSyntax", dependencies: [
+			.product(name: "ContainersPreview", package: "swift-collections"),
+			.product(name: "BasicContainers", package: "swift-collections"),
+		]),
 		.macro(
 			name: "LexerMacros",
 			dependencies: [
@@ -29,7 +33,11 @@ let package = Package(
 				.product(name: "SwiftCompilerPlugin", package: "swift-syntax"),
 				.product(name: "OrderedCollections", package: "swift-collections"),
 				.product(name: "_RegexParser", package: "swift-experimental-string-processing"),
-				"CoreLexer"
+				"CoreLexer",
+				"RegexSyntax",
+			], swiftSettings: [
+				.enableExperimentalFeature("Lifetimes"),
+				.enableExperimentalFeature("InoutLifetimeDependence"),
 			]),
 		.target(name: "CoreLexer"),
 		.target(name: "Lexing", dependencies: ["LexerMacros", "CoreLexer"]),

@@ -11,61 +11,61 @@ import Lexing
 
 @Lexer(skip: "\t| |\n")
 enum BenchTestToken {
-	@regex(/[a-zA-Z_$][a-zA-Z0-9_$]*?/)
+	@Token(/[a-zA-Z_$][a-zA-Z0-9_$]*?/)
 	case Identifier
 
-	@regex(/"([^"\\]|\\t|\\n|\\n|\\")*?"/)
+	@Token(/"([^"\\]|\\t|\\n|\\n|\\")*?"/)
 	case String
 
-	@token(#"private"#)
+	@Token(#"private"#)
 	case Private
 
-	@token(#"primitive"#)
+	@Token(#"primitive"#)
 	case Primitive
 
-	@token(#"protected"#)
+	@Token(#"protected"#)
 	case Protected
 
-	@token(#"in"#)
+	@Token(#"in"#)
 	case In
 
-	@token(#"instanceof"#)
+	@Token(#"instanceof"#)
 	case Instanceof
 
-	@token(#"."#)
+	@Token(#"."#)
 	case Accessor
 
-	@token(#"..."#)
+	@Token(#"..."#)
 	case Ellipsis
 
-	@token(#"("#)
+	@Token(#"("#)
 	case ParenOpen
 
-	@token(#")"#)
+	@Token(#")"#)
 	case ParenClose
 
-	@token(#"{"#)
+	@Token(#"{"#)
 	case BraceOpen
 
-	@token(#"}"#)
+	@Token(#"}"#)
 	case BraceClose
 
-	@token(#"+"#)
+	@Token(#"+"#)
 	case OpAddition
 
-	@token(#"++"#)
+	@Token(#"++"#)
 	case OpIncrement
 
-	@token(#"="#)
+	@Token(#"="#)
 	case OpAssign
 
-	@token(#"=="#)
+	@Token(#"=="#)
 	case OpEquality
 
-	@token(#"==="#)
+	@Token(#"==="#)
 	case OpStrictEquality
 
-	@token(#"=>"#)
+	@Token(#"=>"#)
 	case FatArrow
 }
 
@@ -120,37 +120,36 @@ It was the year when they finally immanentized the Eschaton
 
 let STRINGS = #""tree" "to" "a" "graph" "that can" "more adequately represent" "loops and arbitrary state jumps" "with\"\"\"out" "the\n\n\n\n\n" "expl\"\"\"osive" "nature\"""of trying to build up all possible permutations in a tree." "tree" "to" "a" "graph" "that can" "more adequately represent" "loops and arbitrary state jumps" "with\"\"\"out" "the\n\n\n\n\n" "expl\"\"\"osive" "nature\"""of trying to build up all possible permutations in a tree." "tree" "to" "a" "graph" "that can" "more adequately represent" "loops and arbitrary state jumps" "with\"\"\"out" "the\n\n\n\n\n" "expl\"\"\"osive" "nature\"""of trying to build up all possible permutations in a tree." "tree" "to" "a" "graph" "that can" "more adequately represent" "loops and arbitrary state jumps" "with\"\"\"out" "the\n\n\n\n\n" "expl\"\"\"osive" "nature\"""of trying to build up all possible permutations in a tree.""#
 
-let BENCH_SOURCE = [SOURCE, IDENTIFIERS, STRINGS]
-let TOKEN_NUMs = [30 * 16, 13 * 10, 48]
+let BENCHMARKS = [
+	(30 * 16, SOURCE),
+	(13 * 10, IDENTIFIERS),
+	(48, STRINGS)
+]
 
-final class TestBenchMark: XCTestCase {
-	func testBenchCorrect() throws {
-		for (index, (benchSource, tokenNum)) in zip(BENCH_SOURCE, TOKEN_NUMs).enumerated() {
-			XCTContext.runActivity(named: "test parsing the \(index)th test with \(tokenNum) tokens") { _ in
-				let tokens = Array(BenchTestToken.lexer(source: benchSource))
+@Suite
+struct BenchmarkTests {
+	@Test(arguments: BENCHMARKS)
+	func correct(num: Int, source: String) throws {
+		let tokens = Array(BenchTestToken.lexer(source: source))
 
-				_ = tokens.map { try! $0.get() }
-
-				XCTAssertEqual(tokens.count, tokenNum, "token num of the \(index)th test did not match")
-			}
+		for token in tokens {
+			_ = try token.get()
 		}
+
+		#expect(tokens.count == num)
 	}
 
-	func testBenchSpeed() throws {
+	@Test(arguments: BENCHMARKS)
+	func speed(num: Int, source: String) throws {
 		let ITERATION_COUNT = 10
-
-		for (index, (benchSource, tokenNum)) in zip(BENCH_SOURCE, TOKEN_NUMs).enumerated() {
-			XCTContext.runActivity(named: "test parsing the \(index)th test with \(tokenNum) tokens") { _ in
-				let startTime = Date()
-				for _ in 0 ..< ITERATION_COUNT {
-					_ = Array(BenchTestToken.lexer(source: benchSource).map { $0.get })
-				}
-				let endTime = Date()
-
-				let elapsedTime = endTime.timeIntervalSince(startTime)
-
-				print("parsing \(benchSource.count) for \(ITERATION_COUNT) iterations in \(elapsedTime) seconds: \(Double(benchSource.unicodeScalars.count * ITERATION_COUNT) / Double(elapsedTime)) scalar/s")
-			}
+		let startTime = Date()
+		for _ in 0 ..< ITERATION_COUNT {
+			_ = Array(BenchTestToken.lexer(source: source).map { $0.get })
 		}
+		let endTime = Date()
+
+		let elapsedTime = endTime.timeIntervalSince(startTime)
+
+		print("parsing \(source.count) for \(ITERATION_COUNT) iterations in \(elapsedTime) seconds: \(Double(source.unicodeScalars.count * ITERATION_COUNT) / Double(elapsedTime)) scalar/s")
 	}
 }

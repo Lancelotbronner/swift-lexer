@@ -10,18 +10,15 @@ import SwiftSyntax
 import SwiftSyntaxBuilder
 import SwiftSyntaxMacros
 
-let KALEIDOSCOPE_PACKAGE_NAME: String = "Lexing"
+let LEXER_PACKAGE_NAME: String = "Lexing"
 
-let KALEIDOSCOPE_MACRO_NAME: String = "Lexer"
-let KALEIDOSCOPE_MACRO_SKIP_ATTR: String = "skip"
+let LEXER_MACRO_NAME: String = "Lexer"
+let LEXER_TOKEN_NAME: String = "Token"
+let LEXER_MACRO_SKIP_ATTR: String = "skip"
 
-//TODO: use only @Token and choose variant based on String/Regex literal
-let KALEIDOSCOPE_REGEX_NAME: String = "regex"
-let KALEIDOSCOPE_TOKEN_NAME: String = "token"
-
-let KALEIDOSCOPE_PRIORITY_OPTION: String = "priority"
-let KALEIDOSCOPE_FILL_CALLBACK_OPTION: String = "fillCallback"
-let KALEIDOSCOPE_CREATE_CALLBACK_OPTION: String = "createCallback"
+let LEXER_PRIORITY_OPTION: String = "priority"
+let LEXER_FILL_CALLBACK_OPTION: String = "fillCallback"
+let LEXER_CREATE_CALLBACK_OPTION: String = "createCallback"
 
 /// This extension macro generates an extension to the decorated enum and make it conform to the lexer protocol
 /// so that the decorated enum can be a tokenizer.
@@ -38,7 +35,7 @@ public struct LexerMacro: ExtensionMacro {
 		var graph = Graph()
 
 		// get the macro lists
-		let kaleidoscopeMacroDelcList = enumDecl.attributes.filter { attr in
+		let lexingMacroDelcList = enumDecl.attributes.filter { attr in
 			let attrName: TypeSyntax? = attr.as(AttributeSyntax.self)?.attributeName
 			let ident = attrName?.as(IdentifierTypeSyntax.self)?.name.text
 			let member = attrName?.as(MemberTypeSyntax.self)
@@ -46,21 +43,21 @@ public struct LexerMacro: ExtensionMacro {
 			let memberType = member?.baseType.as(IdentifierTypeSyntax.self)?.name.text
 
 			// check how many of the attributes are like
-			// @kaleidoscope() or Kaleidoscope.kaleidoscope()
-			return ident == KALEIDOSCOPE_MACRO_NAME || (memberIdent == KALEIDOSCOPE_MACRO_NAME && memberType == KALEIDOSCOPE_PACKAGE_NAME)
+			// @Lexer() or Lexing.Lexer()
+			return ident == LEXER_MACRO_NAME || (memberIdent == LEXER_MACRO_NAME && memberType == LEXER_PACKAGE_NAME)
 		}
 
 		// if there are more than 1,
 		// throw error to indicate duplication
-		if kaleidoscopeMacroDelcList.count > 1 {
+		if lexingMacroDelcList.count > 1 {
 			throw LexerError.MultipleMacroDecleration
 		}
 
-		if let kaleidoscopeAttrs = kaleidoscopeMacroDelcList[0].as(AttributeSyntax.self)?.arguments?.as(LabeledExprListSyntax.self) {
-			for kaleidoscopeAttr in kaleidoscopeAttrs {
-				switch kaleidoscopeAttr.label?.text {
-				case KALEIDOSCOPE_MACRO_SKIP_ATTR:
-					guard let skipString = kaleidoscopeAttr.expression.as(StringLiteralExprSyntax.self)?.segments.description else {
+		if let lexingAttrs = lexingMacroDelcList[0].as(AttributeSyntax.self)?.arguments?.as(LabeledExprListSyntax.self) {
+			for lexingAttr in lexingAttrs {
+				switch lexingAttr.label?.text {
+				case LEXER_MACRO_SKIP_ATTR:
+					guard let skipString = lexingAttr.expression.as(StringLiteralExprSyntax.self)?.segments.description else {
 						throw LexerError.ExpectingString
 					}
 					try graph.push(input: .init(token: "SKIP_REGEX_TOKEN", tokenType: .skip, hir: HIR(regex: skipString)))
@@ -98,10 +95,8 @@ public struct LexerMacro: ExtensionMacro {
 				let memberType = member?.baseType.as(IdentifierTypeSyntax.self)?.name.text
 
 				switch (ident, memberIdent, memberType) {
-				case (KALEIDOSCOPE_REGEX_NAME, _, _), (_, KALEIDOSCOPE_REGEX_NAME, KALEIDOSCOPE_PACKAGE_NAME):
-					try attrMatches.append(parse(regex: attr))
-				case (KALEIDOSCOPE_TOKEN_NAME, _, _), (_, KALEIDOSCOPE_TOKEN_NAME, KALEIDOSCOPE_PACKAGE_NAME):
-					try attrMatches.append(parse(token: attr))
+				case (LEXER_TOKEN_NAME, _, _), (_, LEXER_TOKEN_NAME, LEXER_PACKAGE_NAME):
+					try attrMatches.append(parse(attr))
 				case _:
 					break
 				}
@@ -160,16 +155,8 @@ extension SyntaxCollection {
 	}
 }
 
-func parse(regex: AttributeSyntax) throws -> AttrMatchInfo {
-	return try parse(regex, isToken: false)
-}
-
-func parse(token: AttributeSyntax) throws -> AttrMatchInfo {
-	return try parse(token, isToken: true)
-}
-
 /// Parses an enum case's information.
-func parse(_ attr: AttributeSyntax, isToken: Bool) throws -> AttrMatchInfo {
+func parse(_ attr: AttributeSyntax) throws -> AttrMatchInfo {
 	guard let arguments = attr.arguments?.as(LabeledExprListSyntax.self) else {
 		throw LexerError.ParsingError
 	}
@@ -189,7 +176,7 @@ func parse(_ attr: AttributeSyntax, isToken: Bool) throws -> AttrMatchInfo {
 	var matchCallback: TokenType = .standalone
 	var priority: UInt? = nil
 
-	if let foundExpr = findExpression(KALEIDOSCOPE_FILL_CALLBACK_OPTION, in: arguments)?.expression {
+	if let foundExpr = findExpression(LEXER_FILL_CALLBACK_OPTION, in: arguments)?.expression {
 		if let lambda = foundExpr.as(ClosureExprSyntax.self) {
 			// TODO: this might be wrong
 			matchCallback = .fillCallback(.Lambda(lambda.description))
@@ -199,7 +186,7 @@ func parse(_ attr: AttributeSyntax, isToken: Bool) throws -> AttrMatchInfo {
 		}
 	}
 
-	if let foundExpr = findExpression(KALEIDOSCOPE_CREATE_CALLBACK_OPTION, in: arguments)?.expression {
+	if let foundExpr = findExpression(LEXER_CREATE_CALLBACK_OPTION, in: arguments)?.expression {
 		if case .standalone = matchCallback {
 			if let lambda = foundExpr.as(ClosureExprSyntax.self) {
 				// TODO: this might be wrong
@@ -213,7 +200,7 @@ func parse(_ attr: AttributeSyntax, isToken: Bool) throws -> AttrMatchInfo {
 		}
 	}
 
-	if let foundExpr = findExpression(KALEIDOSCOPE_PRIORITY_OPTION, in: arguments)?.expression {
+	if let foundExpr = findExpression(LEXER_PRIORITY_OPTION, in: arguments)?.expression {
 		guard let num = foundExpr.as(IntegerLiteralExprSyntax.self) else {
 			throw LexerError.ExpectingIntegerLiteral
 		}

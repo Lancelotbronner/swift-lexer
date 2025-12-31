@@ -5,6 +5,10 @@
 //  Created by Larry Zeng on 12/4/23.
 //
 
+public typealias MatchCallback<T> = (Lexer<T>) -> CallbackResult<T>
+public struct Lexer<T> {}
+public struct CallbackResult<T> {}
+
 public enum LexerError: Error {
 	case SourceBoundExceeded
 	case EmptyToken
